@@ -1,29 +1,55 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import { Inter_400Regular, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import * as SecureStore from 'expo-secure-store';
+import React from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+const CLERK_PUBLISHABLE_KEY = "pk_test_bmF0aW9uYWwtbG9ic3Rlci04MS5jbGVyay5hY2NvdW50cy5kZXYk";
+
+const tokenCache = {
+    async getToken(key: string) {
+        try {
+            return SecureStore.getItemAsync(key);
+        } catch (err) {
+            return null;
+        }
+    },
+    async saveToken(key: string, value: string) {
+        try {
+            return SecureStore.setItemAsync(key, value);
+        } catch (err) {
+            return;
+        }
+    },
+};
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+    const [fontsLoaded] = useFonts({
+        Inter_400Regular,
+        Inter_700Bold,
+    });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+    if (!fontsLoaded) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#080B30' }}>
+                <ActivityIndicator size="large" color="#90D5FF" />
+            </View>
+        );
+    }
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    return (
+        <Stack
+            screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: '#080B30' },
+                animation: 'slide_from_right',
+            }}
+        >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="details" />
+            <Stack.Screen name="(app)" />
+            <Stack.Screen name="sign-in" />
+            <Stack.Screen name="sign-up" />
+        </Stack>
+    );
 }
