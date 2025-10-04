@@ -7,7 +7,9 @@ import axios from 'axios';
 import { CommentList } from './CommentList';
 declare global {
     interface Window {
-        currentUser?: { name: string };
+        currentUser?: {
+            email: string; name: string
+};
     }
 }
 

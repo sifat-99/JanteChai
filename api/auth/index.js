@@ -1,3 +1,48 @@
+const bcrypt = require('bcryptjs');
+// Register route
+app.post('/register', async (req, res) => {
+    const { name, email, password, role } = req.body;
+    try {
+        await client.connect();
+        const db = client.db();
+        const users = db.collection('users');
+        const existing = await users.findOne({ email });
+        if (existing) {
+            return res.status(400).json({ success: false, error: 'Email already registered' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = { name, email, password: hashedPassword, role };
+        await users.insertOne(user);
+        res.json({ success: true, user: { name, email, role } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        await client.close();
+    }
+});
+
+// Login route
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        await client.connect();
+        const db = client.db();
+        const users = db.collection('users');
+        const user = await users.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ success: false, error: 'User not found' });
+        }
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(400).json({ success: false, error: 'Invalid password' });
+        }
+        res.json({ success: true, user: { name: user.name, email: user.email } });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    } finally {
+        await client.close();
+    }
+});
 // Express backend for /api/auth
 require('dotenv').config({ path: '.env.local' });
 const express = require('express');
